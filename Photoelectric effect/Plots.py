@@ -72,7 +72,7 @@ for i in range(len(x)):
     
     line_2=linear_fit(x[i],y[i],i_data_end[i][0],i_data_end[i][1],err=y_err[i])
     poly_2=np.poly1d(line_2)
-    print(poly_2)
+#    print(poly_2)
     poly2.append(poly_2)
     
     VCO.append(Linear_inter(poly_1,poly_2))
@@ -111,30 +111,91 @@ for i in range(len(x)):
         print('---------')
     VCO1.append(a)
     grad_array.append(b)
-    print(a[-1])
+#    print(a[-1])
 
 def interpolate_grad(x,y):
     m=(y[-1]-y[-2])/(x[-1]-x[-2])
     return (-y[-2]/m)+x[-2]
 
 print(VCO)
-plt.plot(VCO1[0],grad_array[0])
+#plt.plot(VCO1[0],grad_array[0])
 #%%
-roots=[]
-for i in range(len(x)):
-#    i=1
-    f,x_domain,y_range=inter.cubicSpline(x[i],y[i])
-    g=poly2[i](x_domain)
-    index=0
-    h=y_range-g
-    root=100
-    while h[index]>1e-2:
-        index=index+1
-        root=x_domain[index]
-#        print(h[index])
-    roots.append(root)
+def cub_spl(x,y):
+    roots=[]
+    x_spline=[]
+    y_spline=[]
+    for i in range(len(x)):
+        f,x_domain,y_range=inter.cubicSpline(x[i][i_data[i][1]:i_data_end[i][0]+6],y[i][i_data[i][1]:i_data_end[i][0]+6])
+        x_spline.append(x_domain)
+        y_spline.append(y_range)
+        g=poly2[i](x_domain)
+        index=0
+        h=y_range-g
+        root=100
+        while h[index]>1e-2:
+            if index<len(x_domain)-1:
+                index=index+1
+                root=x_domain[index]
+            else:
+                break
+        roots.append(root)
+    return roots,x_spline,y_spline
+
+roots,x_spline,y_spline=cub_spl(x,y)
+
 #%%
-wavelenght=np.array([578.6,546.9,434.7,365.7])
+wavelenght=np.array([578.6,546.9,434.7,365.7])*1e-9
 c=3e8
-plt.plot(c/wavelenght,VCO[:-1],'.')
+
+line_inter=np.polyfit(c/wavelenght,VCO[:-1],1)
+line_inter_poly=np.poly1d(line_inter)
+
+line_grad=np.polyfit(c/wavelenght,roots[:-1],1)
+line_grad_poly=np.poly1d(line_grad)
+
+plt.figure()
+plt.plot(c/wavelenght,VCO[:-1],'.r')
+plt.plot(c/wavelenght,roots[:-1],'.g')
+plt.plot(np.linspace(3e14,1e15,num=10),line_inter_poly(np.linspace(3e14,1e15,num=10)),color="red",label='Interpolation Method')
+plt.plot(np.linspace(3e14,1e15,num=10),line_grad_poly(np.linspace(3e14,1e15,num=10)),color="green",label='Trending Method')
+plt.legend()
+plt.grid()
+plt.show()
+
+def analysis(x):
+    return x[1]*(1.6e-19),-x[0]
+
+inter_h,inter_work=analysis(line_inter_poly)
+grad_h,grad_work=analysis(line_grad_poly)
+
+#def spline_err(x_real,y_real,x_in,y_in):
+#    f=0
+#    err_y=[]
+#    for j in range(len(y_real)):
+#        prod=1
+#        for k in range(len(x_real)):
+#            if k!=j:
+#              prod=prod*(x_real[j]-x_real[k])
+#        f=f+y_real[j]/prod
+##    print(f)
+#    for i in range(len(x_in)):
+#        prod_2=1
+#        for b in range(len(x_real)):
+#            prod_2=prod_2*(x_in[i]-x_real[b])
+##        print(prod_2)
+#        err_y.append(abs(prod_2*f))
+#    return err_y
+#
+#err_spline=spline_err(x[0][i_data[0][1]:i_data_end[0][0]],y[0][i_data[0][1]:i_data_end[0][0]],x_spline[0],y_spline[0])
+
+plt.figure()
+plt.plot(x_spline[0],y_spline[0],'.',color="red")
+#plt.errorbar(x_spline[0],y_spline[0], yerr=err_spline,fmt='-y', ecolor='black', capthick=2)
+plt.plot(x[0],y[0],'.')
+plt.show()
+print(inter_h,inter_work)
+print(grad_h,grad_work)
+#plt.figure()
+##plt.plot(x_spline[0],err_spline)
+
 
