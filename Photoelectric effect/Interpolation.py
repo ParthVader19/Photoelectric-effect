@@ -18,7 +18,7 @@ def simpleInter(x,y):
     
 def cubicSpline(x,y):
     #to find the value of the 2nd order differential at each data point. This is done by generating a series of equations following A.f=b where A is the a tridiagonal matrix (square) of the coefficient of the 2nd order differential, f is a matrix of 2nd order differentials at each point, and b is matrix representing constants based on the data points.  
-    A=np.zeros([len(x)-2,len(x)-2])# a tridiagonal matrix of the coefficient of the 2nd order differential 
+    A=np.zeros([abs(len(x)-2),abs(len(x)-2)])# a tridiagonal matrix of the coefficient of the 2nd order differential 
     b=[]
     counter=1# counter used to position the 2nd order differentials at point x[i] along the diagonal
     for i in range(1,len(x)-1,1): #this uses the natural spline boundary conditions, therefore conditions are used to accound for this in the A matrix
@@ -68,7 +68,7 @@ def cubicSpline(x,y):
             y_new=A_x*y[i]+B_x*y[i+1]+C_x*f_2_corr[i]+D_x*f_2_corr[i+1]#finding the y values for each x point based on the cubic interpolation equation 
             final_y.append(y_new)
     
-    plt.plot(final_x,final_y,label="Cubic Spline")#plots the cubic spline
+#    plt.plot(final_x,final_y,label="Cubic Spline")#plots the cubic spline
     
     return A,final_x,final_y
             

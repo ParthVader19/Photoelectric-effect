@@ -3,23 +3,59 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Interpolation as inter
 
-plt.figure(1)
+#ND filters
+
+ND_203_V,ND_203_I,ND_203_I_err=np.loadtxt("(green 203B).csv", delimiter=',', unpack=True)
+ND_204_V,ND_204_I,ND_204_I_err=np.loadtxt("(green 204B).csv", delimiter=',', unpack=True)
+ND_205_V,ND_205_I,ND_205_I_err=np.loadtxt("(green 205B).csv", delimiter=',', unpack=True)
+ND_210_V,ND_210_I,ND_210_I_err=np.loadtxt("(green 210B).csv", delimiter=',', unpack=True)
+
+wavelenght=np.array([578.6,546.9,434.7,365.7,691.3])*1e-9
+wavelenght_err=np.array([2.04969,0.672794,0.344067,3.97668,9.04574])*1e-9
+c=3e8
+freq_err=(wavelenght_err/wavelenght)*(c/wavelenght)
+freq=c/wavelenght
+colour=['y','g',"purple","blue","red"]
+nd_filters=['203B','204B','205B','210B']
+
+x=[d.yellow_V,d.green_V,d.VB_V,d.B_V,d.red_V]
+y=[d.yellow_I,d.green_I,d.VB_I,d.B_I,d.red_I]
+y_err=[d.yellow_I_err,d.green_I_err,d.VB_I_err,d.B_I_err,d.red_I_err]
+
+x_nd=[ND_203_V,ND_204_V,ND_205_V,ND_210_V]
+y_nd=[ND_203_I,ND_204_I,ND_205_I,ND_210_I]
+y_err_nd=[ND_203_I_err,ND_204_I_err,ND_205_I_err,ND_210_I_err]
+
+#plt.figure()
 #plt.plot(d.yellow_V,d.yellow_I_norm,'.-y',label="Yellow")
 #plt.plot(d.green_V,d.green_I_norm,'.-g',label="Green")
 #plt.plot(d.VB_V,d.VB_I_norm,'.-',color="purple",label="VB")
 #plt.plot(d.B_V,d.B_I_norm,'.-',color="blue",label="B")
 #plt.plot(d.red_V,d.red_I_norm,'.-',color="red",label="Red")
 
-plt.plot(d.yellow_V,d.yellow_I,'.-y',label="Yellow")
-plt.plot(d.green_V,d.green_I,'.-g',label="Green")
-plt.plot(d.VB_V,d.VB_I,'.-',color="purple",label="VB")
-plt.plot(d.B_V,d.B_I,'.-',color="blue",label="B")
-plt.plot(d.red_V,d.red_I,'.-',color="red",label="Red")
+#plt.plot(d.yellow_V,d.yellow_I,'.-y',label="Yellow")
+#plt.plot(d.green_V,d.green_I,'.-g',label="Green")
+#plt.plot(d.VB_V,d.VB_I,'.-',color="purple",label="VB")
+#plt.plot(d.B_V,d.B_I,'.-',color="blue",label="B")
+#plt.plot(d.red_V,d.red_I,'.-',color="red",label="Red")
+plt.figure()
+for i in range(len(x)):
+    plt.plot(x[i],y[i],'.-',color=colour[i],label=str(wavelenght[i]*1e9)+'nm')
+    plt.errorbar(x[i],y[i], yerr=y_err[i],fmt='.-',color=colour[i], ecolor='black', capthick=2)
+plt.xlabel("Applied Voltage (V)")
+plt.ylabel("Current (nA)")
+#plt.ylabel("Normalised Current")
+plt.legend()
+plt.grid()
+plt.show()
 
-plt.xlabel("applied voltage (V)")
-plt.ylabel("Normalised Current")
-#plt.axis([-2.5, 2.5, -0.05, 0.4])
-#plt.errorbar(d.yellow_V,d.yellow_I_norm, yerr=d.yellow_I_err,fmt='o', ecolor='yellow', capthick=2)
+plt.figure()
+for i in range(len(x_nd)):
+    plt.plot(x_nd[i],y_nd[i],'.-',color=colour[i],label=nd_filters[i])
+    plt.errorbar(x_nd[i],y_nd[i], yerr=y_err_nd[i],fmt='.-',color=colour[i], ecolor='black', capthick=2)
+plt.xlabel("Applied Voltage (V)")
+plt.ylabel("Current (nA)")
+#plt.ylabel("Normalised Current")
 plt.legend()
 plt.grid()
 plt.show()
@@ -27,9 +63,6 @@ plt.show()
 def linear_fit(x,y,i_0,i_1,err):
     return np.polyfit(x[i_0:i_1+1], y[i_0:i_1+1], 1,w=1/err[i_0:i_1+1])
 
-x=[d.yellow_V,d.green_V,d.VB_V,d.B_V,d.red_V]
-y=[d.yellow_I,d.green_I,d.VB_I,d.B_I,d.red_I]
-y_err=[d.yellow_I_err,d.green_I_err,d.VB_I_err,d.B_I_err,d.red_I_err]
 
 i_0=27
 i_1=30
@@ -124,6 +157,7 @@ def cub_spl(x,y):
     roots=[]
     x_spline=[]
     y_spline=[]
+    x_spline_range=[]
     for i in range(len(x)):
         f,x_domain,y_range=inter.cubicSpline(x[i][i_data[i][1]:i_data_end[i][0]+6],y[i][i_data[i][1]:i_data_end[i][0]+6])
         x_spline.append(x_domain)
@@ -132,32 +166,77 @@ def cub_spl(x,y):
         index=0
         h=y_range-g
         root=100
-        while h[index]>1e-2:
+        while h[index]>1e-1:
             if index<len(x_domain)-1:
                 index=index+1
                 root=x_domain[index]
             else:
                 break
+        for j in range(len(x[i])-1):
+            if root>x[i][j] and root<x[i][j+1]:
+                #x_spline_range.append([x[i][j],x[i][j+1],x[i][j+1]-x[i][j]])
+                x_spline_range.append(x[i][j+1]-x[i][j])
+                
         roots.append(root)
-    return roots,x_spline,y_spline
+    return roots,x_spline,y_spline,x_spline_range
 
-roots,x_spline,y_spline=cub_spl(x,y)
+poly_nd_1=[]
+for i in range(len(x_nd)):
+#    line_1=linear_fit(x_nd[i],y_nd[i],i_data[i][0],i_data[i][1],err=y_err[i])
+#    poly_1=np.poly1d(line_1)
+#    
+    line_nd=linear_fit(x_nd[i],y_nd[i],16,len(y_nd[i]),err=y_err_nd[i])
+    poly_nd=np.poly1d(line_nd)
+#    print(poly_2)
+    poly_nd_1.append(poly_nd)
+    
+#    VCO.append(Linear_inter(poly_1,poly_2))
+    
+def cub_spl_nd(x,y):
+    roots=[]
+    x_spline=[]
+    y_spline=[]
+    x_spline_range=[]
+    for i in range(len(x)):
+        f,x_domain,y_range=inter.cubicSpline(x[i],y[i])
+        x_spline.append(x_domain)
+        y_spline.append(y_range)
+        g=poly_nd_1[i](x_domain)
+        index=0
+        h=y_range-g
+        root=100
+        while h[index]>1e-1:
+            if index<len(x_domain)-1:
+                index=index+1
+                root=x_domain[index]
+            else:
+                break
+        for j in range(len(x[i])-1):
+            if root>x[i][j] and root<x[i][j+1]:
+                #x_spline_range.append([x[i][j],x[i][j+1],x[i][j+1]-x[i][j]])
+                x_spline_range.append(x[i][j+1]-x[i][j])
+                
+        roots.append(root)
+    return roots,x_spline,y_spline,x_spline_range
+roots,x_spline,y_spline,x_spline_range=cub_spl(x,y)
+roots_nd,x_spline_nd,y_spline_nd,x_spline_range_nd=cub_spl_nd(x_nd,y_nd)
 
 #%%
-wavelenght=np.array([578.6,546.9,434.7,365.7])*1e-9
-c=3e8
 
-line_inter=np.polyfit(c/wavelenght,VCO[:-1],1)
+
+line_inter=np.polyfit(freq[:-1],VCO[:-1],1)
 line_inter_poly=np.poly1d(line_inter)
 
-line_grad=np.polyfit(c/wavelenght,roots[:-1],1)
+line_grad=np.polyfit(freq[:-1],roots[:-1],1)
 line_grad_poly=np.poly1d(line_grad)
 
 plt.figure()
-plt.plot(c/wavelenght,VCO[:-1],'.r')
-plt.plot(c/wavelenght,roots[:-1],'.g')
+plt.errorbar(freq[:-1],roots[:-1], xerr=freq_err[:-1],yerr=x_spline_range[:-1],fmt='.g',ecolor='black', capthick=2)
+plt.plot(freq[:-1],VCO[:-1],'.r')
+plt.plot(freq[:-1],roots[:-1],'.g')
 plt.plot(np.linspace(3e14,1e15,num=10),line_inter_poly(np.linspace(3e14,1e15,num=10)),color="red",label='Interpolation Method')
 plt.plot(np.linspace(3e14,1e15,num=10),line_grad_poly(np.linspace(3e14,1e15,num=10)),color="green",label='Trending Method')
+
 plt.legend()
 plt.grid()
 plt.show()
@@ -188,10 +267,10 @@ grad_h,grad_work=analysis(line_grad_poly)
 #
 #err_spline=spline_err(x[0][i_data[0][1]:i_data_end[0][0]],y[0][i_data[0][1]:i_data_end[0][0]],x_spline[0],y_spline[0])
 
-plt.figure()
-plt.plot(x_spline[0],y_spline[0],'.',color="red")
+#plt.figure()
+#plt.plot(x_spline[0],y_spline[0],'.',color="red")
 #plt.errorbar(x_spline[0],y_spline[0], yerr=err_spline,fmt='-y', ecolor='black', capthick=2)
-plt.plot(x[0],y[0],'.')
+#plt.plot(x[0],y[0],'.')
 plt.show()
 print(inter_h,inter_work)
 print(grad_h,grad_work)
