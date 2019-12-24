@@ -10,6 +10,8 @@ ND_204_V,ND_204_I,ND_204_I_err=np.loadtxt("(green 204B).csv", delimiter=',', unp
 ND_205_V,ND_205_I,ND_205_I_err=np.loadtxt("(green 205B).csv", delimiter=',', unpack=True)
 ND_210_V,ND_210_I,ND_210_I_err=np.loadtxt("(green 210B).csv", delimiter=',', unpack=True)
 
+pow_val,pow_err=np.loadtxt("QE.csv", delimiter=',', unpack=True)
+
 wavelenght=np.array([578.6,546.9,434.7,406.6,365.7,691.3])
 wavelenght_err=np.array([2.04969,0.672794,0.344067,3.60684,3.97668,9.04574])*1e-9
 c=3e8
@@ -248,7 +250,6 @@ def cub_spl_nd(x1,y1):
 roots,x_spline,y_spline,x_spline_range=cub_spl(x[:-1],y[:-1])
 roots_nd,x_spline_nd,y_spline_nd,x_spline_range_nd=cub_spl_nd(x_nd,y_nd)
 
-#%%
 
 
 line_inter=np.polyfit(freq[:-1],VCO,1,w=1/np.array(VCO_err),cov=True)
@@ -266,7 +267,8 @@ plt.errorbar(freq[:-1],roots, xerr=freq_err[:-1],yerr=x_spline_range,fmt='.g',ec
 
 plt.plot(np.linspace(3e14,1e15,num=10),line_inter_poly(np.linspace(3e14,1e15,num=10)),color="red",label='Interpolation Method')
 plt.plot(np.linspace(3e14,1e15,num=10),line_grad_poly(np.linspace(3e14,1e15,num=10)),color="green",label='Trending Method')
-
+plt.xlabel('Frequency (Hz)')
+plt.ylabel(r'$V_{CE}$ (V)')
 plt.legend()
 plt.grid()
 plt.show()
@@ -285,7 +287,25 @@ print(grad_h,grad_h_err)
 print(grad_work,grad_work_err)
 
 #%%
+QE=[]
+QE_err=[]
+h=6.63e-34
+e=1.6e-19
+for i in range(len(x)):
+    for j in range(len(x[i])):
+        if x[i][j]==0:
+            A=(y[i][j]*1e-9/e)/(pow_val[i]/(h*freq[i]))
+            QE.append(A)
+            err1=np.sqrt((y_err[i][j]/y[i][j])**2 +(freq_err[i]/freq[i])**2)
+            QE_err.append(A*np.sqrt((err1/(y[i][j]*freq[i]))**2 + (pow_err[i]/pow_val[i])**2))
+            
 
-
+plt.figure()
+#plt.plot(freq,QE,'.')
+plt.errorbar(freq,QE, xerr=freq_err,yerr=QE_err,fmt='.g',ecolor='black', capthick=2)
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('External Quantum Efficiency')
+plt.grid()
+plt.show()
 
 
