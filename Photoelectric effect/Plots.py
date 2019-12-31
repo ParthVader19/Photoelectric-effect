@@ -233,7 +233,7 @@ def cub_spl_nd(x1,y1):
         index=0
         h=y_range-g
         root=100
-        while h[index]>1e-1:
+        while h[index]>0.5e-1:
             if index<len(x_domain)-1:
                 index=index+1
                 root=x_domain[index]
@@ -250,6 +250,38 @@ def cub_spl_nd(x1,y1):
 roots,x_spline,y_spline,x_spline_range=cub_spl(x[:-1],y[:-1])
 roots_nd,x_spline_nd,y_spline_nd,x_spline_range_nd=cub_spl_nd(x_nd,y_nd)
 
+VCO_nd=[]
+VCO_err_nd=[]
+poly2_nd=[]
+for i in range(len(x_nd)):
+    line_1=linear_fit(x_nd[i],y_nd[i],1,9,err=y_err_nd[i])
+    poly_1=np.poly1d(line_1[0])
+    
+    line_2=linear_fit(x_nd[i],y_nd[i],15,len(x_nd[i])-1,err=y_err_nd[i])
+    poly_2=np.poly1d(line_2[0])
+#    print(poly_2)
+    poly2_nd.append(poly_2)
+    V,V_err=linear_err(line_1,line_2)
+    #VCO.append(Linear_inter(poly_1,poly_2))
+    VCO_nd.append(V)
+    VCO_err_nd.append(V_err)
+
+print(VCO_nd)
+print(VCO[1])
+
+fig, (ax1, ax2) = plt.subplots(1, 2)
+
+ax1.grid()
+ax1.errorbar([3,4,5,10],np.array(VCO_nd)/0.34146324208143686,yerr=np.array(VCO_err_nd)/0.34146324208143686,fmt='.',color="black",label="Linear Extrapolation")
+ax1.plot(np.linspace(2,11,10),np.zeros(10)+1,'--k')
+
+ax2.errorbar([3,4,5,10],np.array(roots_nd)/roots[1],yerr=np.array(x_spline_range_nd)/roots[1],fmt='.',color="black",label="Cubic-Spline Interpolation")
+ax2.plot(np.linspace(2,11,10),np.zeros(10)+1,'--k')
+ax2.grid()
+ax1.set(xlabel='Relative ND Filter Strength', ylabel=r'$V_{CE,Filter}/V_{CE,no Filter}$')
+ax2.set(xlabel='Relative ND Filter Strength')
+plt.show()
+#%%
 
 
 line_inter=np.polyfit(freq[:-1],VCO,1,w=1/np.array(VCO_err),cov=True)
@@ -300,12 +332,10 @@ for i in range(len(x)):
             QE_err.append(A*np.sqrt((err1/(y[i][j]*freq[i]))**2 + (pow_err[i]/pow_val[i])**2))
             
 
-plt.figure()
-#plt.plot(freq,QE,'.')
-plt.errorbar(freq,QE, xerr=freq_err,yerr=QE_err,fmt='.g',ecolor='black', capthick=2)
-plt.xlabel('Frequency (Hz)')
-plt.ylabel('External Quantum Efficiency')
-plt.grid()
-plt.show()
 
+for i in range(len(x)):
+    for j in range(len(x[i])):
+        if x[i][j]==0:
+            eff.append((y[i][j]))
+            
 
