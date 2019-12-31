@@ -319,23 +319,24 @@ print(grad_h,grad_h_err)
 print(grad_work,grad_work_err)
 
 #%%
-QE=[]
-QE_err=[]
-h=6.63e-34
-e=1.6e-19
-for i in range(len(x)):
-    for j in range(len(x[i])):
-        if x[i][j]==0:
-            A=(y[i][j]*1e-9/e)/(pow_val[i]/(h*freq[i]))
-            QE.append(A)
-            err1=np.sqrt((y_err[i][j]/y[i][j])**2 +(freq_err[i]/freq[i])**2)
-            QE_err.append(A*np.sqrt((err1/(y[i][j]*freq[i]))**2 + (pow_err[i]/pow_val[i])**2))
-            
 
-
-for i in range(len(x)):
-    for j in range(len(x[i])):
-        if x[i][j]==0:
-            eff.append((y[i][j]))
-            
-
+QE=[] 
+QE_err=[] 
+h=6.63e-34 
+e=1.6e-19 
+for i in range(len(x)): 
+    for j in range(len(x[i])): 
+        if x[i][j]==0: 
+            A=(y[i][j]*1e-9/e)/(pow_val[i]/(h*freq[i])) 
+            QE.append(A) 
+            err1=np.sqrt((y_err[i][j]/y[i][j])**2 +(freq_err[i]/freq[i])**2) 
+            QE_err.append(A*np.sqrt((err1/(y[i][j]*freq[i]))**2 + (pow_err[i]/pow_val[i])**2)) 
+             
+ 
+plt.figure() 
+#plt.plot(freq,QE,'.') 
+plt.errorbar(freq,QE, xerr=freq_err,yerr=QE_err,fmt='.g',ecolor='black', capthick=2) 
+plt.xlabel('Frequency (Hz)') 
+plt.ylabel('External Quantum Efficiency') 
+plt.grid() 
+plt.show() 
