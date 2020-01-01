@@ -68,10 +68,10 @@ plt.show()
 def linear_fit(x,y,i_0,i_1,err):
     return np.polyfit(x[i_0:i_1+1], y[i_0:i_1+1], 1,w=1/err[i_0:i_1+1],cov=True)
 
-col_ind=3
-i_0=13
-i_1=17
-i_0_1=25
+col_ind=1
+i_0=30
+i_1=35
+i_0_1=42
 i_1_1=len(x[col_ind])-1
 
 
@@ -84,13 +84,13 @@ yellow_poly_2=np.poly1d(yellow_line_2[0])
 
 plt.figure()
 #plt.plot(x[col_ind],y[col_ind],'.y')
-plt.plot(np.linspace(-3.5,1,num=10),yellow_poly_1(np.linspace(-3.5,1,num=10)),linewidth=2,label="Extrapolating Linear Section")
-plt.plot(np.linspace(-1,9,num=10),yellow_poly_2(np.linspace(-1,9,num=10)),color="red",linewidth=2,label="Extrapolating Offset Section")
+#plt.plot(np.linspace(-3.5,1,num=10),yellow_poly_1(np.linspace(-3.5,1,num=10)),linewidth=2,label="Extrapolating Linear Section")
+#plt.plot(np.linspace(-1,9,num=10),yellow_poly_2(np.linspace(-1,9,num=10)),color="red",linewidth=2,label="Extrapolating Offset Section")
 plt.errorbar(x[col_ind],y[col_ind], yerr=y_err[col_ind],fmt='--.',color="black", ecolor='black', capthick=2,label="Yellow Light Data")
-plt.plot(x[col_ind][i_0],y[col_ind][i_0],'or')
-plt.plot(x[col_ind][i_1],y[col_ind][i_1],'og')
-plt.plot(x[col_ind][i_0_1],y[col_ind][i_0_1],'or')
-plt.plot(x[col_ind][i_1_1-1],y[col_ind][i_1_1-1],'og')
+#plt.plot(x[col_ind][i_0],y[col_ind][i_0],'or')
+#plt.plot(x[col_ind][i_1],y[col_ind][i_1],'og')
+#plt.plot(x[col_ind][i_0_1],y[col_ind][i_0_1],'or')
+#plt.plot(x[col_ind][i_1_1-1],y[col_ind][i_1_1-1],'og')
 #plt.axis([-5, 5, -5, 175])
 plt.xlabel(r'Applied Voltage (V)')
 plt.ylabel(r'Current (nA)')
@@ -250,6 +250,27 @@ def cub_spl_nd(x1,y1):
 roots,x_spline,y_spline,x_spline_range=cub_spl(x[:-1],y[:-1])
 roots_nd,x_spline_nd,y_spline_nd,x_spline_range_nd=cub_spl_nd(x_nd,y_nd)
 
+fig, (ax3, ax4) = plt.subplots(1, 2)
+ax3.errorbar(x[0],y[0], yerr=y_err[0],fmt='.k', capthick=2,label="Yellow Light Data")
+ax3.plot(x_spline[0],y_spline[0],'--k',label='Cubic-Spline Fitting')
+ax3.axis(xmin=0,xmax=8,ymin=-1,ymax=20)
+#ax3.xlabel(r'Applied Voltage (V)')
+#plt.ylabel(r'Current (nA)')
+ax3.legend()
+ax3.grid()
+
+ax4.errorbar(x[0],y[0], yerr=y_err[0],fmt='.k', capthick=2,label="Yellow Light Data")
+ax4.plot(x_spline[0],y_spline[0],'--k',label='Cubic-Spline Fitting')
+ax4.axis(xmin=4.5,xmax=8,ymin=-0.15,ymax=-0.1)
+#ax3.xlabel(r'Applied Voltage (V)')
+#plt.ylabel(r'Current (nA)')
+ax4.legend()
+ax4.grid()
+ax3.set(xlabel=r'Applied Voltage (V)', ylabel=r'Current (nA)')
+ax4.set(xlabel=r'Applied Voltage (V)')
+
+
+#%%
 VCO_nd=[]
 VCO_err_nd=[]
 poly2_nd=[]
@@ -278,8 +299,8 @@ ax1.plot(np.linspace(2,11,10),np.zeros(10)+1,'--k')
 ax2.errorbar([3,4,5,10],np.array(roots_nd)/roots[1],yerr=np.array(x_spline_range_nd)/roots[1],fmt='.',color="black",label="Cubic-Spline Interpolation")
 ax2.plot(np.linspace(2,11,10),np.zeros(10)+1,'--k')
 ax2.grid()
-ax1.set(xlabel='Relative ND Filter Strength', ylabel=r'$V_{CE,Filter}/V_{CE,no Filter}$')
-ax2.set(xlabel='Relative ND Filter Strength')
+ax1.set(xlabel='Relative ND Filter Strength', ylabel=r'$V_{CE,Filter}/V_{CE,no Filter}$', title='Linear Extrapolation')
+ax2.set(xlabel='Relative ND Filter Strength',title='Cubic-Spline Interpolation')
 plt.show()
 #%%
 
@@ -297,8 +318,8 @@ plt.errorbar(freq[:-1],VCO, xerr=freq_err[:-1],yerr=VCO_err,fmt='.r',ecolor='bla
 plt.plot(freq[:-1],roots,'.g')
 plt.errorbar(freq[:-1],roots, xerr=freq_err[:-1],yerr=x_spline_range,fmt='.g',ecolor='black', capthick=2)
 
-plt.plot(np.linspace(3e14,1e15,num=10),line_inter_poly(np.linspace(3e14,1e15,num=10)),color="red",label='Interpolation Method')
-plt.plot(np.linspace(3e14,1e15,num=10),line_grad_poly(np.linspace(3e14,1e15,num=10)),color="green",label='Trending Method')
+plt.plot(np.linspace(3e14,1e15,num=10),line_inter_poly(np.linspace(3e14,1e15,num=10)),color="red",label='Linear Extrapolation Method')
+plt.plot(np.linspace(3e14,1e15,num=10),line_grad_poly(np.linspace(3e14,1e15,num=10)),color="green",label='Cubic-Spline Interpolation')
 plt.xlabel('Frequency (Hz)')
 plt.ylabel(r'$V_{CE}$ (V)')
 plt.legend()
@@ -335,7 +356,7 @@ for i in range(len(x)):
  
 plt.figure() 
 #plt.plot(freq,QE,'.') 
-plt.errorbar(freq,QE, xerr=freq_err,yerr=QE_err,fmt='.g',ecolor='black', capthick=2) 
+plt.errorbar(freq,QE, xerr=freq_err,yerr=QE_err,fmt='.k',ecolor='black', capthick=2) 
 plt.xlabel('Frequency (Hz)') 
 plt.ylabel('External Quantum Efficiency') 
 plt.grid() 
